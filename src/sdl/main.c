@@ -51,6 +51,9 @@
 #include "videomode.h"
 #include "sdl/video.h"
 #include "sdl/input.h"
+#include "uvsg_serial_data.h"
+#include "cpu.h"
+#include "pokey.h"
 
 int PLATFORM_Configure(char *option, char *parameters)
 {
@@ -178,6 +181,13 @@ int main(int argc, char **argv)
 			exit(0);
 	}
 
+#define SERIAL_TCP_PORT 5541
+    UVSGSerialDataReceiver *receiver = UVSGSerialDataReceiverCreate();
+    UVSGSerialDataReceiverStart(receiver, SERIAL_TCP_PORT);
+    UBYTE *serialBuffer = NULL;
+    size_t serialBufferSize = 0;
+    size_t serialBufferTail = 0;
+    
 	/* main loop */
 	for (;;) {
 		INPUT_key_code = PLATFORM_Keyboard();
@@ -200,6 +210,24 @@ int main(int argc, char **argv)
 		Atari800_Frame();
 		if (Atari800_display_screen)
 			PLATFORM_DisplayScreen();
+        
+        // If we've finished writing out the current serial buffer, get more serial data from the network
+        if (serialBufferTail == serialBufferSize) {
+            serialBufferSize = UVSGSerialDataReceiverReceiveData(receiver, (void **)&serialBuffer);
+            serialBufferTail = 0;
+        }
+        
+        // If there's data pending in the buffer, write it out to serial
+        if (serialBufferTail < serialBufferSize) {
+            // Write a byte out to serial input
+            POKEY_SERIN = (char)serialBuffer[serialBufferTail];
+            
+            // Perform interrupt
+            POKEY_IRQST &= 0xdf;
+            CPU_GenerateIRQ();
+            
+            serialBufferTail++;
+        }
 	}
 }
 

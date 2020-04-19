@@ -385,7 +385,7 @@ case "$a8_target" in
     default)
         if [[ "$a8_host" != "dos" ]]; then
 dnl In DJGPP building with zlib fails with -ansi.
-            CFLAGS="$CFLAGS -ansi"
+            CFLAGS="$CFLAGS"
         fi
         CFLAGS="$CFLAGS -pedantic -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Winline"
         if [[ "$a8_host" != "beos" ]]; then
@@ -450,7 +450,7 @@ dnl BeOS has a real issue with redundant-decls
         A8_NEED_LIB(stdc++)
         A8_NEED_LIB(ws2_32)
         A8_NEED_LIB(gdi32)
-        CFLAGS="$CFLAGS -ansi -pedantic -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wstrict-prototypes -Winline"
+        CFLAGS="$CFLAGS -pedantic -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wstrict-prototypes -Winline"
         LDFLAGS="$LDFLAGS -mwindows"
         ;;
     libatari800)
