@@ -31,12 +31,16 @@
  Windows declarations
  */
 typedef SOCKET UVSGSocket;
-typedef size_t ssize_t;
 #define close _close
 
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #define EAGAIN EWOULDBLOCK
+#define ECONNRESET WSAECONNRESET
+#endif
+
+#ifndef __MINGW32__
+typedef size_t ssize_t;
 #endif
 
 #else
@@ -95,7 +99,7 @@ static void UVSGInitializeSocketSupport(void) {
     initialized = true;
 }
 
-static UVSGSocket UVSGCreateTCPSocket() {
+static UVSGSocket UVSGCreateTCPSocket(void) {
     UVSGInitializeSocketSupport();
 
     // Create socket
@@ -178,21 +182,21 @@ static void UVSGSerialDataReceiverAcceptConnection(UVSGSerialDataReceiver *recei
 
 static size_t UVSGSerialDataReceiverReadFromConnection(UVSGSerialDataReceiver *receiver, void **receivedData) {
     ssize_t byteCount = recv(receiver->tcpConnection, receiver->buffer, SERIAL_TCP_BUFFER_LENGTH, 0);
+    int error = getUVSGSocketError();
+
+    if (byteCount == 0 || (byteCount < 0 && error == ECONNRESET)) {
+        // Client disconnected
+        close(receiver->tcpConnection);
+        receiver->connectionStatus = UVSGConnectionStatusWaitingForConnection;
+        return 0;
+    }
+
     if (byteCount < 0) {
-        int error = getUVSGSocketError();
-        
         // No data is waiting
         if (error == EAGAIN)
             return 0;
         
         fprintf(stderr, "UVSGSerialDataReceiver: Error reading from socket: %d\n", error);
-        return 0;
-    }
-    
-    if (byteCount == 0) {
-        // Client disconnected
-        close(receiver->tcpConnection);
-        receiver->connectionStatus = UVSGConnectionStatusWaitingForConnection;
         return 0;
     }
     
