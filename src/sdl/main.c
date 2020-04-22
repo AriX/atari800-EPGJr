@@ -51,7 +51,7 @@
 #include "videomode.h"
 #include "sdl/video.h"
 #include "sdl/input.h"
-#include "uvsg_serial_data.h"
+#include "UVSGSerialData.h"
 #include "cpu.h"
 #include "pokey.h"
 

@@ -205,7 +205,7 @@ endif
 if WITH_VIDEO_SDL
 atari800_SOURCES += \
 	videomode.c videomode.h \
-	sdl/main.c \ uvsg_serial_data.c \
+	sdl/main.c \ UVSGSerialData.c \
 	sdl/video.c sdl/video.h \
 	sdl/video_sw.c sdl/video_sw.h \
 	sdl/input.c sdl/input.h \
